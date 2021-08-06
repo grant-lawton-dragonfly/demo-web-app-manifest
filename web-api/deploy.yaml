@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: web-api
+  name: web-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-api
+  template:
+    metadata:
+      labels:
+        app: web-api
+    spec:
+      containers:
+      - image: kennethreitz/httpbin
+        imagePullPolicy: Always
+        name: web-api
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 5m
+            memory: 70Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: web-api
+  name: web-api
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: web-api
+  type: ClusterIP

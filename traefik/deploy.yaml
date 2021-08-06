@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: traefik-ingress-controller
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik
+  labels:
+    app: traefik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+    spec:
+      serviceAccountName: traefik-ingress-controller
+      containers:
+        - name: traefik
+          image: traefik:v2.0
+          args:
+          - --api.insecure
+          - --accesslog
+          - --entrypoints.web.Address=:8000
+          - --providers.kubernetescrd
+          - --metrics.prometheus=true
+          ports:
+          - name: web
+            containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+spec:
+  type: LoadBalancer
+  ports:
+  - protocol: TCP
+    name: web
+    port: 80
+    targetPort: web
+  - protocol: TCP
+    name: admin
+    port: 8080
+  selector:
+    app: traefik

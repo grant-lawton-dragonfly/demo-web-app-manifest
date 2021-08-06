@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: authsecret
+data:
+  # admin / admin
+  users: YWRtaW46JGFwcjEkdWllZko3UkskaHhOc1ZUZzFjSVBWZlp6VEJ6Uk9wLgoK
+
+---
+# Declaring the user list
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: default-ingress-auth
+spec:
+  basicAuth:
+    secret: authsecret
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: web-api-ingress
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`api.dev.git-ops.xyz`)
+    kind: Rule
+    services:
+    - name: web-api
+      port: 80
+    middlewares:
+    - name: default-ingress-auth
